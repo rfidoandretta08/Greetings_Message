@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,7 @@ var greetings = []Greeting{
 	{ID: 1, Message: "Selamat pagi", Status: "active"},
 }
 
-func main() {
+func Handler() *gin.Engine {
 	router := gin.Default()
 
 	Salam := router.Group("/api/Salam")
@@ -27,37 +26,35 @@ func main() {
 		Salam.POST("/greetings", createGreeting)
 	}
 
-	router.Run(":8080")
+	return router
 }
 
 func getGreetings(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": greetings,
-	})
+	c.JSON(200, gin.H{"data": greetings})
 }
 
 func getGreetingByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(400, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
 	for _, g := range greetings {
 		if g.ID == id {
-			c.JSON(http.StatusOK, gin.H{"data": g})
+			c.JSON(200, gin.H{"data": g})
 			return
 		}
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"error": "Greeting not found"})
+	c.JSON(404, gin.H{"error": "Greeting not found"})
 }
 
 func createGreeting(c *gin.Context) {
 	var newGreeting Greeting
 
 	if err := c.ShouldBindJSON(&newGreeting); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -66,7 +63,7 @@ func createGreeting(c *gin.Context) {
 
 	greetings = append(greetings, newGreeting)
 
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(201, gin.H{
 		"message": "Greeting created successfully",
 		"data":    newGreeting,
 	})
